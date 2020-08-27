@@ -97,7 +97,7 @@ Here&#39;s an example of the completed form:
 ### Step 6. Create the Architect flows in Genesys Cloud
 
 1. Open the Genesys Cloud Architect page at [https://apps.myCloud.com/architect/#/inboundcall/flows](https://apps.mypurecloud.com/architect/#/inboundcall/flows)
-1. Import the sample flow, located in the [ArchitectFlows folder](.ArchitectFlows), as a new Flow in Architect per the [Genesys Cloud documentation](https://help.mypurecloud.com/articles/import-export-call-flow).
+1. Import the sample flow, located in the [ArchitectFlows folder](./ArchitectFlows), as a new Flow in Architect per the [Genesys Cloud documentation](https://help.mypurecloud.com/articles/import-export-call-flow).
 1. Navigate to the Get Bill action.
 1. Update the flow to point to the newly created data actions
    1. Change the category to the integration you created in Step 5.1
