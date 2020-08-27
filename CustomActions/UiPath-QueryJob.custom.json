@@ -1,0 +1,67 @@
+{
+  "name": "UiPath-QueryJob",
+  "integrationType": "aws-lambda-data-actions",
+  "actionType": "custom",
+  "config": {
+    "request": {
+      "requestUrlTemplate": "ARN_FOR_UiPathQueryJob_GOES_HERE",
+      "requestType": "POST",
+      "headers": {},
+      "requestTemplate": "${input.rawRequest}"
+    },
+    "response": {
+      "translationMap": {
+        "billDate": "$.OutputArgumentsbillDate",
+        "state": "$.State",
+        "billTotal": "$.OutputArgumentsbillTotal"
+      },
+      "translationMapDefaults": {},
+      "successTemplate": "{\r\n\"state\": ${state},\r\n \"billDate\": ${billDate},\r\n \"billTotal\": ${billTotal}\r\n }"
+    }
+  },
+  "contract": {
+    "input": {
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-04/schema#",
+        "type": "object",
+        "required": [
+          "jobKey",
+          "folderId"
+        ],
+        "properties": {
+          "jobKey": {
+            "type": "string"
+          },
+          "folderId": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "output": {
+      "successSchema": {
+        "$schema": "http://json-schema.org/draft-04/schema#",
+        "type": "object",
+        "required": [
+          "state",
+          "billTotal",
+          "billDate"
+        ],
+        "properties": {
+          "state": {
+            "type": "string"
+          },
+          "billTotal": {
+            "type": "string"
+          },
+          "billDate": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "secure": false
+}

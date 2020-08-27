@@ -1,0 +1,57 @@
+{
+  "name": "UiPath-StartJob",
+  "integrationType": "aws-lambda-data-actions",
+  "actionType": "custom",
+  "config": {
+    "request": {
+      "requestUrlTemplate": "ARN_FOR_UiPathStartJob_GOES_HERE",
+      "requestType": "POST",
+      "headers": {},
+      "requestTemplate": "${input.rawRequest}"
+    },
+    "response": {
+      "translationMap": {
+        "job": "$.jobKey"
+      },
+      "translationMapDefaults": {},
+      "successTemplate": "{\r\n\"jobKey\": ${job}\r\n}"
+    }
+  },
+  "contract": {
+    "input": {
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-04/schema#",
+        "type": "object",
+        "required": [
+          "releaseKey",
+          "folderId"
+        ],
+        "properties": {
+          "releaseKey": {
+            "type": "string"
+          },
+          "folderId": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "output": {
+      "successSchema": {
+        "$schema": "http://json-schema.org/draft-04/schema#",
+        "type": "object",
+        "required": [
+          "jobKey"
+        ],
+        "properties": {
+          "jobKey": {
+            "type": "integer"
+          }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "secure": false
+}
