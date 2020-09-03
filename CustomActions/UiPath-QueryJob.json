@@ -1,0 +1,77 @@
+{
+  "name": "QueryJob",
+  "integrationType": "custom-rest-actions",
+  "actionType": "custom",
+  "config": {
+    "request": {
+      "requestUrlTemplate": "https://cloud.uipath.com/${input.AccountLogicalName}/${input.TenantLogicalName}/odata/Jobs(${input.JobKey})",
+      "requestType": "GET",
+      "headers": {
+        "Authorization": "Bearer ${authResponse.access_token}",
+        "X-UIPATH-OrganizationUnitId": "${input.FolderId}",
+        "X-UIPATH-TenantName": "${input.TenantLogicalName}"
+      },
+      "requestTemplate": "{\n\t\"startInfo\": {\n\t\t\"ReleaseKey\": \"${input.ReleaseKey}\",\n\t\t\"RobotIds\": [],\n\t\t\"JobsCount\": 1,\n\t\t\"JobPriority\": \"${input.JobPriority}\",\n\t\t\"Strategy\": \"${input.Strategy}\",\n\t\t\"InputArguments\": \"${input.InputArguments}\"\n\t}\n}"
+    },
+    "response": {
+      "translationMap": {
+        "outputArguments": "$.OutputArguments",
+        "state": "$.State"
+      },
+      "translationMapDefaults": {},
+      "successTemplate": "{ \"State\": $state #if ($outputArguments != \"null\"),\"OutputArguments\": $outputArguments.substring(1, $math.sub($outputArguments.length(), 1)).replaceAll('\\\\\\\"', '\\\"').replaceAll('\\\\r', '').replaceAll('\\\\n', '').replaceAll('\\\\\\\\', '\\\\').replaceAll('\\\\b', '').replaceAll('\\\\f', '').replaceAll('\\\\t', '') #end }"
+    }
+  },
+  "contract": {
+    "input": {
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "JobKey",
+          "AccountLogicalName",
+          "TenantLogicalName",
+          "FolderId"
+        ],
+        "properties": {
+          "JobKey": {
+            "type": "integer"
+          },
+          "AccountLogicalName": {
+            "type": "string"
+          },
+          "TenantLogicalName": {
+            "type": "string"
+          },
+          "FolderId": {
+            "type": "integer"
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "output": {
+      "successSchema": {
+        "type": "object",
+        "properties": {
+          "State": {
+            "type": "string"
+          },
+          "OutputArguments": {
+            "type": "object",
+            "properties": {
+              "billAmount": {
+                "type": "number"
+              },
+              "billDate": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "secure": false
+}

@@ -18,13 +18,133 @@ The UiPath Enterprise Platform connects Genesys Cloud to any system, including t
 - **Realize rapid ROI** : Streamlined integration capabilities, easy-to-use customizable automation templates and an intuitive UI in UiPath Studio ensure fast deployment and a quick return on investment (ROI) alongside your Genesys Cloud instance.​​
 - **Improve customer &amp; employee satisfaction** : With UiPath and Genesys Cloud, customers and employee requests are resolved quickly, thereby boosting CSAT and NPS.​
 
-![](.github/Architecture.png)
-
 ## Demo: Fulfilling IVR requests with UiPath automation
 
 Aileen is a customer of Meeple Telco and wants to know the current balance for her mobile phone bill. She makes a voice call to her Meeple Telco customer service number and the IVR flow queries the back-end for her last bill date and total. Aileen is thrilled that she was able to answer her question in under 30 seconds and without having to talk to anyone!
 
-## Deployment Steps
+# Deployment Steps
+
+UiPath has provided two different flavors of this integration:
+
+- Calling UiPath directly via Genesys Cloud Data Actions
+- Calling UiPath via AWS Lambda
+
+Directions for setting up both integrations are below.
+
+## Calling UiPath directly
+
+![](.github/Architecture.png)
+
+### Step 1. Create &amp; configure your UiPath Cloud instance
+
+1. Create a [new UiPath cloud instance](https://platform.uipath.com/portal_/register), or [use an existing instace](https://cloud.uipath.com/)
+2. Download the sample processes [in this repo](https://github.com/UiPath/AmazonConnect/tree/master/processes), or use your own processes
+
+- BillLookup - an unattended automation that takes a phone number as input and returns the last monthly bill details
+
+1. Publish the processes from Studio to Orchestrator - [HowTo](https://docs.uipath.com/orchestrator/docs/publishing-a-project-from-studio-to-orchestrator)
+2. Deploy the processes - [HowTo](https://docs.uipath.com/orchestrator/docs/managing-processes)
+3. Generate a user key and client ID for your cloud instance - [HowTo](https://docs.uipath.com/cloudplatform/docs/about-api-access)
+4. Note down the following information as it will be needed in later steps:
+   - User Key
+   - Client Id
+   - Account logical name
+   - Tenant logical name
+
+### Step 2. Setup the Genesys Cloud Web Services Data Action integration
+
+1. Navigate to the Interactions/Integrations page, i.e. [https://apps.mypurecloud.com/admin/#/integrations/apps](https://apps.mypurecloud.com/admin/#/integrations/apps)
+1. Add a **Web Services Data Action** integration to your instance per the [Genesys Cloud documentation](https://help.mypurecloud.com/articles/add-a-data-actions-integration/).
+1. Name the integration, i.e. UiPath Web Services Data Actions
+1. Switch to the Configuration tab, then the Credentials tab, and then click the Configure button.
+1. Choose **User Defined (OAuth)** and add 3 credential fields:
+
+| **Field Name** | **Value** |
+| --- | --- |
+| **authUrl** | https://account.uipath.com/oauth/token |
+| **clientId** | The Client Id value from step 1.6 |
+| **userKey** | The UserKey value from step 1.6 |
+
+![](.github/Credentials.png)
+
+6. Click the OK button on the Configure Credentials dialog
+1. Click the Save button on the Configuration page
+1. Mark the Integration as active
+
+### Step 3. Configure the UiPath Web Services Data Actions (Auth) action
+
+1. Navigate to the Integrations/Actions page, i.e. [https://apps.mypurecloud.com/admin/#/integrations/actions](https://apps.mypurecloud.com/admin/#/integrations/actions)
+2. Find the &quot;Custom Auth&quot; action starting with the name you gave the integration in step 2.3, i.e. UiPath Web Services Data Actions (Auth)
+3. Click the ellipsis for the action and choose Edit Action
+4. Switch to the Setup tab, then the Configuration tab.
+5. Click the Viewing toggle control at the bottom of the screen to change it to Draft mode.
+6. Change the Request URL template to **${credentials.authUrl}**
+7. Remove the Authorization header
+8. Change the Content-Type header to **application/json**
+9. Change the Request Body Template to the following JSON blob
+
+```
+{
+  "grant_type": "refresh_token",
+  "client_id": "${credentials.clientId}",
+  "refresh_token": "${credentials.userKey}",
+}
+```
+
+![](.github/Auth.png)
+
+10. Click the Save Draft button
+1. Switch to the Test tab and click the Run Action button. This should return &quot;Action successfully run&quot;. If it returns an error, please double check you followed the above steps correctly.
+1. Click the Save &amp; Publish button and confirm the publish on the resulting dialog
+
+### Step 4. Import and configure the UiPath StartJob Data Action
+
+1. Navigate to the Integrations/Actions page, i.e. [https://apps.mypurecloud.com/admin/#/integrations/actions](https://apps.mypurecloud.com/admin/#/integrations/actions)
+1. Import the action, CustomActions\UiPath-StartJob.custom, located in the downloaded ZIP from this Connect Marketplace listing.
+1. Click on the integration you created in step 2.3 and click the Import Action button
+1. Click the Save &amp; Publish button and confirm the publish on the resulting dialog
+
+### Step 5. Import and configure the UiPath QueryJob Data Action
+
+1. Navigate to the Integrations/Actions page, i.e. [https://apps.mypurecloud.com/admin/#/integrations/actions](https://apps.mypurecloud.com/admin/#/integrations/actions)
+1. Import the action, CustomActions\UiPath-QueryJob.custom, located in the downloaded ZIP from this Connect Marketplace listing.
+1. Click on the integration you created in step 2.3 and click the Import Action button
+1. Click on the Setup tab
+1. Change the QueryJob data action to match the output of the job you intend to call.
+  1. Update the Output Contract on the Contracts Tab to include named properties for each output argument of the UiPath process
+  2. Update the Response on the Configuration Tab to map the outputs to these properties.
+6. Click the Save &amp; Publish button and confirm the publish on the resulting dialog
+
+### Step 6. Create the Architect flows in Genesys Cloud
+
+1. Open the Genesys Cloud Architect page at [https://apps.myCloud.com/architect/#/inboundcall/flows](https://apps.mypurecloud.com/architect/#/inboundcall/flows)
+2. Import the sample flow file, **Sample Flow calling UiPath via Data Action.i3InboundFlow** , located in the downloaded ZIP from this Connect Marketplace listing, as a new Flow in Architect per the [Genesys Cloud documentation](https://help.mypurecloud.com/articles/import-export-call-flow).
+3. Navigate to the Get Bill action.
+4. Update the flow to point to the newly created data actions
+   1. Change the category to the integration you created in Step 2.3
+   1. Change the data action to the Start Job data action you created in Step 4.2. _NOTE: If it does not appear in the list, make sure you published it in Step 5.2.4._
+   1. Provide the inputs to start the job (Task #15)
+      - releaseKey - provide the GUID for the process to run, [see below](#obtaining-a-release-key)
+      - accountLogicalName –you retrieved this value in step 1.6
+      - tenantLogicalName –you retrieved this value in step 1.6
+      - folderId - provide the ID for the Orchestrator folder, [see below](#obtaining-the-folder-id)
+      - [Optional] inputArguments – provide the inputs to the UiPath process as a JSON string. For example, &#39;{&quot;arg1&quot;: &quot;value1&quot;, &quot;arg2&quot;:0}&#39;
+   1. Store the success output, job key as a variable, i.e. Task.jobKey (Task #15)
+   1. Provide the inputs to query the job (Task #23)
+      - jobKey – this should be the variable output from Task #15 (Task.jobKey)
+      - accountLogicalName –you retrieved this value in step 1.6
+      - tenantLogicalName –you retrieved this value in step 1.6
+      - folderId - provide the ID for the Orchestrator folder, [see below](#obtaining-the-folder-id)
+   1. [Optional] Store the success outputs as variables to be used elsewhere in the flow.
+1. Publish the completed flow per the [Genesys Cloud documentation](https://help.mypurecloud.com/articles/publish-call-flow/).
+
+### Step 7. Configure &amp; test your flows
+
+1. To Test the flow, open up the phone dialer and call the flow directly. The format to dial is Name@localhost where Name is the name of the flow with spaces replaced by &quot;%20&quot;. For example, I&#39;ve called my flow &quot;UiPath Demo&quot; so I would call &quot;UiPath%20Demo@localhost&quot; to test the flow.
+
+## Calling UiPath via AWS Lambda
+
+![](.github/ArchitectureAWS.png)
 
 ### Step 1. Create &amp; configure your UiPath Cloud instance
 

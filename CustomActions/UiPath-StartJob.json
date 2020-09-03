@@ -1,0 +1,92 @@
+{
+  "name": "StartJob",
+  "integrationType": "custom-rest-actions",
+  "actionType": "custom",
+  "config": {
+    "request": {
+      "requestUrlTemplate": "https://cloud.uipath.com/${input.AccountLogicalName}/${input.TenantLogicalName}/odata/Jobs/UiPath.Server.Configuration.OData.StartJobs",
+      "requestType": "POST",
+      "headers": {
+        "Authorization": "Bearer ${authResponse.access_token}",
+        "X-UIPATH-OrganizationUnitId": "${input.FolderId}",
+        "X-UIPATH-TenantName": "${input.TenantLogicalName}",
+        "Content-Type": ""
+      },
+      "requestTemplate": "{\n\t\"startInfo\": {\n\t\t\"ReleaseKey\": \"${input.ReleaseKey}\",\n\t\t\"RobotIds\": [],\n\t\t\"JobsCount\": 1,\n\t\t\"JobPriority\": \"${input.JobPriority}\",\n\t\t\"Strategy\": \"${input.Strategy}\",\n\t\t\"InputArguments\": \"${input.InputArguments}\"\n\t}\n}"
+    },
+    "response": {
+      "translationMap": {
+        "jobKey": "$.value.[0].Id"
+      },
+      "translationMapDefaults": {},
+      "successTemplate": "{\"jobKey\": ${jobKey}}"
+    }
+  },
+  "contract": {
+    "input": {
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "ReleaseKey",
+          "InputArguments",
+          "JobPriority",
+          "Strategy",
+          "AccountLogicalName",
+          "TenantLogicalName",
+          "FolderId"
+        ],
+        "properties": {
+          "ReleaseKey": {
+            "type": "string"
+          },
+          "InputArguments": {
+            "default": "{}",
+            "type": "string"
+          },
+          "JobPriority": {
+            "default": "Normal",
+            "type": "string",
+            "enum": [
+              "High",
+              "Normal",
+              "Low"
+            ]
+          },
+          "Strategy": {
+            "default": "JobsCount",
+            "type": "string",
+            "enum": [
+              "JobsCount",
+              "ModernJobsCount"
+            ]
+          },
+          "AccountLogicalName": {
+            "type": "string"
+          },
+          "TenantLogicalName": {
+            "type": "string"
+          },
+          "FolderId": {
+            "type": "integer"
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "output": {
+      "successSchema": {
+        "type": "object",
+        "required": [
+          "jobKey"
+        ],
+        "properties": {
+          "jobKey": {
+            "type": "integer"
+          }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "secure": false
+}
